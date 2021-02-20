@@ -7,7 +7,7 @@ permalink: /archive/
 <a name="posts"></a>
 <archieve>
   <name>Posts</name>
-  {%- assign posts = site.posts | where:"categories","post" -%}
+  {%- assign posts = site.posts -%}
   {%- assign groupedByYear = posts | group_by_exp:"post","post.date | date:'%Y' " -%}
   <!-- total posts: {{ posts.size }} -->
 
