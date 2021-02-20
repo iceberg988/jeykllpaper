@@ -2,11 +2,11 @@
 #
 # This is the configuration file for your blog, please change these items after forked.
 
-title: Your title
+title: FlamingBytes
 email: your-email@example.com
-name: Your name
+name: Iceberg
 description: >- # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here.
+  Focus on System Performance Analysis and Optimization
 keywords: [Your keywords]
 baseurl: '' # the subpath of your site, e.g. /`blog
 url: '' # the base hostname & protocol for your site, e.g. http://example.com
