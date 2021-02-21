@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Generate Millions of Files"
+title:  "Generate millions of files"
 date:   2021-02-18
 last_modified_at: 2021-02-18
 categories: [Performance]
