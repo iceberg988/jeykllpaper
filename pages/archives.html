@@ -5,7 +5,8 @@ permalink: /archives/
 ---
 
 <archieve class="container-page">
-  <h1 class="page-title">{{ site.data.lang[site.language] }}</h1>
+  <h1 class="page-title">Archives</h1>
+  
   {%- assign posts = site.posts -%}
   {%- assign groupedByYear = posts | group_by_exp:"post","post.date | date:'%Y' " -%}
 
