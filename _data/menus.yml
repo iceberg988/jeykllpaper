@@ -1,10 +1,10 @@
-- default: menu_blog
+- title: "BLog"
   url: ''
 
-- default: menu_category
+- title: "Categories"
   url: 'categories'
 
-- default: menu_archives
+- title: "Archives"
   url: 'archives' 
 
 - title: "About"
