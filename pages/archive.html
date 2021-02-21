@@ -5,24 +5,20 @@ permalink: /archive/
 ---
 
 <a name="posts"></a>
-<archieve>
-  <name>Posts</name>
+<archieve class="container-page">
+  <h1 class="page-title">{{ site.data.lang[site.language].archive_title }}</h1>
   {%- assign posts = site.posts -%}
   {%- assign groupedByYear = posts | group_by_exp:"post","post.date | date:'%Y' " -%}
-  <!-- total posts: {{ posts.size }} -->
 
   {%- for yearitem in groupedByYear -%}
-  <yearlist>
-    <year>{{ yearitem.name }}</year>
-
-    <list>
-    {%- for item in yearitem.items -%}
-      <item>
-        <date>{{ item.date | date:'%B %e'}}</date>
-        <span><a href="{{ item.url }}">{{ item.title }}</a></span>
-      </item>
-    {% endfor %}
-    </list>
-  </yearlist>
+    <ul class="categories-list">
+      <li><div class="category-name">{{ yearitem.name }}</div>
+      {%- for item in yearitem.items -%}
+      <div class="posts-list-item">
+        <span class="posts-list-item-name float-left"><a href="{{ item.url }}">{{ item.title }}</a></span>
+        <span class="posts-list-item-date float-right">{{ item.date | date: "%Y-%m-%d" }}</span>
+      </div>
+      {% endfor %}
+    </ul>
   {% endfor %}
 </archieve>
