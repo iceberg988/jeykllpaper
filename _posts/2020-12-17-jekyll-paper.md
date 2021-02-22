@@ -3,8 +3,8 @@ layout: post
 title:  "Welcome to Jekyll Paper!"
 date:   2020-12-17
 last_modified_at: 2021-02-15
-categories: [Jekyll]
-tags: [Themes]
+categories: [website]
+tags: [jekyll]
 ---
 
 Jekyll Paper is a simple Jekyll theme, and it is aim to helping you to create your own blog by the easiest way.
