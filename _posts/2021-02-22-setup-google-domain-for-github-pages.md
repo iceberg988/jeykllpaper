@@ -1,0 +1,60 @@
+---
+layout: post
+title: Setup google domain for github pages
+date: 2021-02-22 09:59
+category: [website]
+tags: []
+author: Iceberg
+---
+
+1. In the GitHub repository settings, specify the google domain name to serve the GitHub pages.
+   ![](/assets/images/github-setting.png)
+
+   ![](/assets/images/github-custom-domain.png)
+
+2. Go to Google Domains DNS view, create an [A record](https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site#configuring-a-records-with-your-dns-provider) to point the domain to the DNS IP addresses for GitHub pages.
+
+   ![](/assets/images/google-domain.png)
+
+   To verify the DNS record configured correctly, use the dig command to confirm the results match the IP addresses for GitHub Pages above.
+
+   ```
+   $ dig flamingbytes.com +noall +answer
+   ; <<>> DiG 9.10.6 <<>> flamingbytes.com +noall +answer
+   ;; global options: +cmd
+   flamingbytes.com.	3600	IN	A	185.199.110.153
+   flamingbytes.com.	3600	IN	A	185.199.108.153 
+   flamingbytes.com.	3600	IN	A	185.199.109.153
+   flamingbytes.com.	3600	IN	A	185.199.111.153
+   ``` 
+
+3. Create a CNAME record that points the google domain to the GitHub pages.
+
+   ![](/assets/images/google-domain-cname.png)
+
+   To verify the CNAMe record setup is corret, use the dig command to check as the following.
+
+   ```
+   $ dig www.flamingbytes.com +nostats +nocomments +nocmd
+   ; <<>> DiG 9.10.6 <<>> www.flamingbytes.com +nostats +nocomments +nocmd
+   ;; global options: +cmd
+   ;www.flamingbytes.com.		IN	A
+   www.flamingbytes.com.	3406	IN	CNAME	iceberg988.github.io.
+   iceberg988.github.io.	3600	IN	A	185.199.108.153
+   iceberg988.github.io.	3600	IN	A	185.199.110.153
+   iceberg988.github.io.	3600	IN	A	185.199.109.153
+   iceberg988.github.io.	3600	IN	A	185.199.111.153
+   ```
+
+4. Go back to GitHub repository setting page, clear and re-enter the google domain name to enable https.
+ 
+   ![](/assets/images/github-setting-https.png)
+
+5. In about 15 minutes, the GitHub pages will be published in the Google Domain.
+
+   ![](/assets/images/github-setting-publish.png)
+
+   You may see the following page before the website can be accessed successfully.
+
+   ![](/assets/images/github-certificate-issue.png)
+   
