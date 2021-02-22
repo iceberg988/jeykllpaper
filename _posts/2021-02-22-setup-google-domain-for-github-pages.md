@@ -7,7 +7,7 @@ tags: []
 author: Iceberg
 ---
 
-1. In the GitHub repository settings, specify the your Google domain name to serve the GitHub pages.
+1. In the GitHub repository settings, specify your Google domain name to serve the GitHub pages.
    ![](/assets/images/github-setting.png)
 
    ![](/assets/images/github-custom-domain.png)
