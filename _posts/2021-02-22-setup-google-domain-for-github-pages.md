@@ -12,7 +12,7 @@ author: Iceberg
 
    ![](/assets/images/github-custom-domain.png)
 
-2. Go to Google Domains DNS view, create an <span style="color:blue">[A record](https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site#configuring-a-records-with-your-dns-provider)</span> and CNAME entry to point your Google domain at your web server. 
+2. Go to Google Domains DNS view, create an [A record](https://docs.github.com/en/github/working-with-github-pages/managing-a-custom-domain-for-your-github-pages-site#configuring-a-records-with-your-dns-provider) and CNAME entry to point your Google domain at your web server. 
 
    ![](/assets/images/google-domain-dns.png)
 
