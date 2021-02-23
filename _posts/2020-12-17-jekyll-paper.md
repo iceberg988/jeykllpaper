@@ -3,7 +3,7 @@ layout: post
 title:  "Build minimalism style blog with Jekyll Paper"
 date:   2020-12-17
 last_modified_at: 2021-02-15
-categories: [Web]
+categories: [WebApps]
 tags: [Jekyll]
 ---
 
