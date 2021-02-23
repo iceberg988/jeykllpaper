@@ -2,8 +2,8 @@
 layout: post
 title: Setup google domain for github pages
 date: 2021-02-22 09:59
-category: [Web]
-tags: [Domain]
+category: [WebApps]
+tags: [GoogleDomain]
 author: Iceberg
 ---
 
