@@ -3,13 +3,32 @@ layout: default
 title: Search
 permalink: /search/
 ---
+<style> 
+    input[type=text] {
+      width: 100%;
+      box-sizing: border-box;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+      background-color: white;
+      background-image: url('/assets/images/searchicon.png');
+      background-position: 10px 10px; 
+      background-repeat: no-repeat;
+      padding: 12px 20px 12px 40px;
+    }
+</style>
+
+<archieve class="container-page">
+<h1 class="page-title">Search Posts</h1>
 
 <!-- Html Elements for Search -->
-<div id="search-container">
-    <input type="text" id="search-input" placeholder="search...">
+<div id="search-container" >
+    <input type="text" id="search-input" placeholder="Search..">
     <ul id="results-container"></ul>
 </div>
-    
+
+</archieve>
+
 <!-- Script pointing to search-script.js -->
 <script src="/assets/scripts/search.js" type="text/javascript"></script>
     
