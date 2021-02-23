@@ -7,5 +7,8 @@
 - title: "Archives"
   url: 'archives' 
 
+- title: "Search"
+  url: 'search' 
+
 - title: "About"
   url: 'about' 
