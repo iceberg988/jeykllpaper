@@ -263,8 +263,6 @@ lrwx------ 1 root root 64 Feb 18 15:49 2 -> socket:[39812186]
 
 Now, we understand it actually writes to a socket but rather a real file. This makes sense because the application is a data generator which produce data in memory and send to remote server through network.
 
-Very often, we have to diagnose performance issue by digging out the kernel code paths and identifying the latency for each call. This can be achieved with other tracing tools like frace. This is beyond the scope of this article so we won't explain detail about ftrace here.
-
 ## Source
 
 * <https://en.wikipedia.org/wiki/Ptrace>
