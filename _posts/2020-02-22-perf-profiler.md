@@ -241,7 +241,10 @@ Except for tracing the predefined perf events which are present in *perf list* c
 
 **uprobes**
 
+## perf stat
 
+
+## CPU profiling
 
 ## Resource
 
