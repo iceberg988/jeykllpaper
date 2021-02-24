@@ -15,7 +15,7 @@ perf, aka perf_events, is the official Linux profiler and included in the Linux 
 
 ## Performance Monitoring Counter(PMC)
 
-1. Show system wide PMC statistics
+**Show system wide PMC statistics**
 
 The following example shows PMC statistics for the entire system, for 5 seconds 
 ```bash
@@ -35,7 +35,7 @@ $ perf stat -a sleep 5
        5.038337951 seconds time elapsed
 ```
 
-2. Show PMC statistics for the specified process
+**Show PMC statistics for the specified process**
 
 The following example shows PMC statistics for the dd process
 
@@ -234,10 +234,10 @@ dd  9851 [022] 3196252.710033:                  syscalls:sys_enter_write: fd: 0x
 
 Except for the predefined perf events, sometimes, we need trace some more events. *perf* provides the capability to dynamically create the events as needed.
 
-### kprobes
+**kprobes**
 
 
-### uprobes
+**uprobes**
 
 
 
