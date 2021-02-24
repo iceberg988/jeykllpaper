@@ -186,7 +186,7 @@ perf_event_attr:
 ------------------------------------------------------------
 ```
 
-In Linux, there is a limit for frequency rate and cpu utilization for perf.
+In Linux, there is a limit for frequency rate and cpu utilization for perf. These limits can be changed with *sysctl* if needed.
 
 ```bash
 $ sysctl -a | grep kernel.perf_event_max_sample_rate
@@ -199,6 +199,7 @@ kernel.perf_cpu_time_max_percent = 25
 ## Tracepoint events
 
 In terminal one, we kick off the dd workload to read from /dev/zero and write to a file with 5GB data.
+
 ```bash
 $  dd if=/dev/zero of=testfile2 count=10000000
 10000000+0 records in
@@ -232,9 +233,10 @@ dd  9851 [022] 3196252.710033:                  syscalls:sys_enter_write: fd: 0x
 
 ## Dynamic tracing with probe events
 
-Except for the predefined perf events, sometimes, we need trace some more events. *perf* provides the capability to dynamically create the events as needed.
+Except for tracing the predefined perf events which are present in *perf list* command, *perf* is capable of creating more events dynamically.
 
 **kprobes**
+
 
 
 **uprobes**
