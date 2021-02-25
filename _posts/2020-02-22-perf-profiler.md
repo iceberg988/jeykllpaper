@@ -405,7 +405,7 @@ _KERNEL
 [...]
 ```
 
-The following are the reports without using "-g" option during profiling. It summarized the profile without the detail function graph.
+The following are the reports without using "-g" option during profiling. It summarizes the profile without the detail function graph.
 
 ```bash
 $ perf script
