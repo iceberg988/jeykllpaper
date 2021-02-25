@@ -15,7 +15,8 @@ perf, aka perf_events, is the official Linux profiler and included in the Linux 
 
 **Show system wide PMC statistics**
 
-The following example shows PMC statistics for the entire system, for 5 seconds 
+The following example shows PMC statistics for the entire system, for 5 seconds.
+
 ```bash
 $ perf stat -a sleep 5
 
@@ -35,34 +36,30 @@ $ perf stat -a sleep 5
 
 **Show PMC statistics for the specified process**
 
-The following example shows PMC statistics for the dd process
+The following example shows PMC statistics for the fio process. The fio job file will be included later on.
 
 ```bash
-$ perf stat dd if=/dev/zero of=/dev/null count=10000000
-10000000+0 records in
-10000000+0 records out
-5120000000 bytes (5.1 GB) copied, 24.273 s, 211 MB/s
+$  perf stat fio fio_job_file.ini
+Performance counter stats for 'fio fio_job_file.ini':
 
- Performance counter stats for 'dd if=/dev/zero of=/dev/null count=10000000':
+          9,500.26 msec task-clock                #    0.172 CPUs utilized
+           133,844      context-switches          #    0.014 M/sec
+            13,540      cpu-migrations            #    0.001 M/sec
+           107,703      page-faults               #    0.011 M/sec
+    21,039,694,713      cycles                    #    2.215 GHz
+     8,896,839,896      instructions              #    0.42  insn per cycle
+     1,755,629,641      branches                  #  184.798 M/sec
+        34,380,966      branch-misses             #    1.96% of all branches
 
-         24,215.88 msec task-clock                #    0.998 CPUs utilized
-                29      context-switches          #    0.001 K/sec
-                 9      cpu-migrations            #    0.000 K/sec
-               216      page-faults               #    0.009 K/sec
-    84,457,629,678      cycles                    #    3.488 GHz
-    57,721,722,068      instructions              #    0.68  insn per cycle
-    11,116,384,346      branches                  #  459.053 M/sec
-       123,121,154      branch-misses             #    1.11% of all branches
+      55.143040711 seconds time elapsed
 
-      24.274369589 seconds time elapsed
-
-       6.860780000 seconds user
-      17.355968000 seconds sys
+       4.520016000 seconds user
+       5.921369000 seconds sys
 ```
 
 ## perf events
 
-perf events can be listed using *perf list*. I just include a few for examples of each kind of events. It includes hardware event, hardware cache event, software event, PMU event tracepoint event and SDT event.
+perf events can be listed using *perf list*. I only list a few of them for example. It includes hardware event, hardware cache event, software event, PMU event tracepoint event and SDT event.
 
 ```bash
 $ perf list
@@ -101,6 +98,7 @@ List of pre-defined events (to be used in -e):
   sdt_libc:memory_heap_less                          [SDT event]
   sdt_libc:memory_heap_more                          [SDT event]
   sdt_libc:memory_heap_new                           [SDT event]  
+[...]  
 ```
 
 ## PMC sample frequency
