@@ -452,14 +452,138 @@ $ perf stat -e kmem:kmem_cache_alloc -p `pidof fio` -a -- sleep 5
 ```
 ## Dynamic tracing with probe events
 
-Except for tracing the predefined perf events which are present in *perf list* command, *perf* is capable of creating more events dynamically.
+Except for tracing the predefined perf events which are present in *perf list* command, *perf* is capable of creating more probe events dynamically.
 
 **kprobes**
 
+kprobes(kernel probes) can trace kernel function or instruction.
+
+Noticed that there are lots of function calls of *native_apic_mem_write*
+
+```bash
+$ perf record -F 99 -p `pidof fio` -a -- sleep 5
+$ perf script
+  fio 225677 3122981.775077:      42831 cycles:ppp:  ffffffff87663ec0 native_apic_mem_write+0x0 ([kernel.kallsyms])
+  fio 225677 3122981.775309:      62731 cycles:ppp:  ffffffff87635b48 native_sched_clock+0x58 ([kernel.kallsyms])
+[...]  
+```
+
+It's not a pre-defined tracepoint.
+
+```bash
+$  perf list | grep native_write_msr_safe
+```
+
+It's a kernel function.
+
+```bash
+$ cat /proc/kallsyms | grep native_write_msr_safe
+ffffffff8766d5b0 t native_write_msr_safe
+```
+
+We add the probe event for the kernel function and it will be listed in *perf list*. Now it's ready for tracing.
+
+```bash
+$  perf probe --add native_write_msr_safe
+Added new event:
+  probe:native_write_msr_safe (on native_write_msr_safe)
+
+You can now use it in all perf tools, such as:
+
+	perf record -e probe:native_write_msr_safe -aR sleep 1
+
+$ perf list | grep native_write_msr_safe
+  probe:native_write_msr_safe                        [Tracepoint event]
+
+$  perf record -e probe:native_write_msr_safe -p `pidof fio` -a -g sleep 5
+Warning:
+PID/TID switch overriding SYSTEM
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.417 MB perf.data (1564 samples) ]
+
+$ perf script
+fio 241552 [020] 3123367.978632: probe:native_write_msr_safe: (ffffffff8766d5b0)
+        ffffffff8766d5b1 native_write_msr_safe+0x1 ([kernel.kallsyms])
+        ffffffff8770de01 clockevents_program_event+0x71 ([kernel.kallsyms])
+        ffffffff8770fb03 tick_program_event+0x23 ([kernel.kallsyms])
+        ffffffff876cad42 hrtimer_interrupt+0xf2 ([kernel.kallsyms])
+        ffffffff8765c61b local_apic_timer_interrupt+0x3b ([kernel.kallsyms])
+        ffffffff87d949d3 smp_apic_timer_interrupt+0x43 ([kernel.kallsyms])
+        ffffffff87d90efa apic_timer_interrupt+0x16a ([kernel.kallsyms])
+        ffffffffc13a484d vx_log+0x2bd ([kernel.kallsyms])
+        ffffffffc14620cb vx_trancommit+0x70b ([kernel.kallsyms])
+        ffffffffc1327fb3 vx_growfile+0x683 ([kernel.kallsyms])
+        ffffffffc132ecbd vx_tran_extset+0x79d ([kernel.kallsyms])
+        ffffffffc132d982 vx_extset+0x4e2 ([kernel.kallsyms])
+        ffffffffc13ea139 vx_do_fallocate+0x479 ([kernel.kallsyms])
+        ffffffffc13ea330 vx_fallocate+0x60 ([kernel.kallsyms])
+        ffffffffc13ea3e6 vx_fallocate_v2+0x16 ([kernel.kallsyms])
+        ffffffff87847d82 vfs_fallocate+0x142 ([kernel.kallsyms])
+        ffffffff87848dab sys_fallocate+0x5b ([kernel.kallsyms])
+        ffffffff87d8fede system_call_fastpath+0x25 ([kernel.kallsyms])
+            7fcc1002a730 fallocate64+0x70 (/usr/lib64/libc-2.17.so)
+[...]         
+```
+
+We can remove the kprobe if it's no longer needed.
+
+```bash
+$ perf probe --del native_write_msr_safe
+Removed event: probe:native_write_msr_safe
+```
+
+The function variables including arguments are available to perf if the **kernel debuginfo** is available.
+
+```bash
+$ perf probe --vars native_write_msr_safe
+```
+
 **uprobes**
 
-## perf stat
+uprobes can trace user-space functions in applications and libraries.
+
+The following example adds user probe for fopen function on the libc library.
+
+```bash
+$ perf probe -x /usr/lib64/libc.so.6 --add fopen
+Added new event:
+  probe_libc:fopen     (on fopen in /usr/lib64/libc-2.17.so)
+
+You can now use it in all perf tools, such as:
+
+	perf record -e probe_libc:fopen -aR sleep 1
+
+$  perf probe --del probe_libc:fopen
+Removed event: probe_libc:fopen
+
+```
+
+The return of the function can be instrumented by adding %return after the function.
+
+```bash
+$  perf probe -x /usr/lib64/libc.so.6 --add fopen%return
+Added new event:
+  probe_libc:fopen__return (on fopen%return in /usr/lib64/libc-2.17.so)
+
+You can now use it in all perf tools, such as:
+
+	perf record -e probe_libc:fopen__return -aR sleep 1
+
+$ perf list |grep fopen
+  probe_libc:fopen__return                           [Tracepoint event]
+
+$ perf probe --del probe_libc:fopen__return
+Removed event: probe_libc:fopen__return
+
+```
+
+If the system has debuginfo for the target library, the variable information including arguments might be available.
+
+```bash
+$ perf probe -x /usr/lib64/libc.so.6 --vars fopen
+```
 
 ## Resource
 
 * [perf source code](https://elixir.bootlin.com/linux/latest/source/tools/perf)
+* <https://www.kernel.org/doc/html/latest/trace/>
