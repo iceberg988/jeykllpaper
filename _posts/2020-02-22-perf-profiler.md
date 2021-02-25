@@ -196,54 +196,6 @@ $ sysctl -a | grep kernel.perf_cpu_time_max_percent
 kernel.perf_cpu_time_max_percent = 25
 ```
 
-## Tracepoint events
-
-In terminal one, we kick off the dd workload to read from /dev/zero and write to a file with 5GB data.
-
-```bash
-$  dd if=/dev/zero of=testfile2 count=10000000
-10000000+0 records in
-10000000+0 records out
-5120000000 bytes (5.1 GB) copied, 39.4875 s, 130 MB/s
-```
-
-In terminal two, while the dd workload is running, we start recording the events of all syscalls which match the pattern sys_enter_*.
-
-```bash
-$ perf record -e syscalls:sys_enter_* -p `pidof dd` -a sleep 5
-Warning:
-PID/TID switch overriding SYSTEM
-[ perf record: Woken up 571 times to write data ]
-Warning:
-Processed 2162353 events and lost 12 chunks!
-
-Check IO/CPU overload!
-
-[ perf record: Captured and wrote 203.492 MB perf.data (2039794 samples) ]
-```
-
-After the perf recording, we can use *perf script* command to print the events.
-
-```bash
-$ perf script | more
-dd  9851 [022] 3196252.710031:                  syscalls:sys_enter_read: fd: 0x00000000, buf: 0x01588000, count: 0x00000200
-dd  9851 [022] 3196252.710033:                  syscalls:sys_enter_write: fd: 0x00000001, buf: 0x0158a000, count: 0x00000200
-[...]
-```
-
-## Dynamic tracing with probe events
-
-Except for tracing the predefined perf events which are present in *perf list* command, *perf* is capable of creating more events dynamically.
-
-**kprobes**
-
-
-
-**uprobes**
-
-## perf stat
-
-
 ## CPU profiling
 
 perf is often used for CPU profiling. 
@@ -287,6 +239,16 @@ We start the perf profiling in a different terminal while the above fio workload
 
 ```bash
 $ perf record -F 99 -p `pidof fio` -a -g -- sleep 5
+```
+
+Once the profiling is done, a *perf.data* result file is generated for later analysis. We use *perf report --stdio* command to summarize the *perf.data* and generate a text report.
+
+From the text report, we can have a better idea on how the fio works by understanding the system call function graph. This is extremly useful when we need identify the high latency of functions.
+
+```bash
+$ ls -la | grep perf.data
+-rw-------.  1 root root   143460 Feb 25 02:25 perf.data
+
 $ perf report --stdio > perf.report.stdio.out
 # To display the perf.data header info, please use --header/--header-only options.
 #
@@ -397,6 +359,106 @@ $ perf report --stdio > perf.report.stdio.out
                                      kmem_cache_alloc
 [...]
 ```
+
+## Tracepoint events
+
+In the previous profile, we saw a function kmem_cache_alloc. It's a pre-defined tracepoint. So, we can trace it directly to understand the call graph related.
+
+```bash
+$ perf list | grep kmem_cache_alloc
+  kmem:kmem_cache_alloc                              [Tracepoint event]
+```
+
+```bash
+$ perf record -F 99 -e kmem:kmem_cache_alloc -p `pidof fio` -a -g -- sleep 5 
+```
+
+We can check the target tracepoint call graph as below.
+
+```
+$ perf report --stdio
+    14.61%    14.61%  (mmap_region+0x38c) call_site=ffffffff877fa39c ptr=0xffff9193252c5f38 bytes_req=216 bytes_alloc=216 gfp_flags=GFP_KERNEL|GFP_ZERO
+            |
+            ---__mmap64
+               system_call_fastpath
+               sys_mmap
+               sys_mmap_pgoff
+               vm_mmap_pgoff
+               do_mmap
+               mmap_region
+               kmem_cache_alloc
+[...]               
+```
+*perf script* can also be used to get a summary. It's useful to spot patterns overtime which might be lost in a huge report summary.
+
+```bash
+$ perf script
+
+fio 264249 [020] 3116264.020748: kmem:kmem_cache_alloc: (getname_flags+0x4f) call_site=ffffffff8785c74f ptr=0xffff9234810d5000 bytes_req=4096 bytes_alloc=4096 gfp_flags=GFP
+_KERNEL
+	ffffffff8782660d kmem_cache_alloc+0xfd ([kernel.kallsyms])
+	ffffffff8785c74f getname_flags+0x4f ([kernel.kallsyms])
+	ffffffff8785d8c5 user_path_at_empty+0x45 ([kernel.kallsyms])
+	ffffffff8785d951 user_path_at+0x11 ([kernel.kallsyms])
+	ffffffff87850633 vfs_fstatat+0x63 ([kernel.kallsyms])
+	ffffffff87850a51 SYSC_newlstat+0x31 ([kernel.kallsyms])
+	ffffffff87850ebe sys_newlstat+0xe ([kernel.kallsyms])
+	ffffffff87d8fede system_call_fastpath+0x25 ([kernel.kallsyms])
+	    7fd8de3ea365 __lxstat64+0x15 (/usr/lib64/libc-2.17.so)
+	            8000 [unknown] ([unknown])
+[...]
+```
+
+The following are the reports without using "-g" option during profiling. It summarized the profile without the detail function graph.
+
+```bash
+$ perf script
+    fio 276212 [047] 3116580.119986: kmem:kmem_cache_alloc: (get_empty_filp+0x5c) call_site=ffffffff8784d10c ptr=0xffff922b52f2ee00 bytes_req=256 bytes_alloc=256 g
+    fio 276212 [047] 3116580.120138: kmem:kmem_cache_alloc: (sys_io_setup+0xaa) call_site=ffffffff878a182a ptr=0xffff918f24972f40 bytes_req=576 bytes_alloc=576 gfp
+    fio 276212 [008] 3116580.120419: kmem:kmem_cache_alloc: (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff91224f606f00 bytes_req=192 bytes_alloc=192 gf
+    fio 276212 [008] 3116580.120420: kmem:kmem_cache_alloc: (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff91224f606f00 bytes_req=192 bytes_alloc=192 gf
+    fio 276212 [008] 3116580.120420: kmem:kmem_cache_alloc: (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff91224f606f00 bytes_req=192 bytes_alloc=192 gf
+    fio 276212 [008] 3116580.120425: kmem:kmem_cache_alloc: (vx_alloc+0x152) call_site=ffffffffc13ec032 ptr=0xffff91b661b0bd10 bytes_req=88 bytes_alloc=88 gfp_flag
+    fio 276212 [008] 3116580.120440: kmem:kmem_cache_alloc: (getname_flags+0x4f) call_site=ffffffff8785c74f ptr=0xffff919470bd5000 bytes_req=4096 bytes_alloc=4096
+```
+
+```bash
+$ perf report --stdio
+    12.93%  (vx_alloc+0x152) call_site=ffffffffc13ec032 ptr=0xffff90e61cd6c840 bytes_req=88 bytes_alloc=88 gfp_flags=GFP_NOFS|GFP_NOWARN|GFP_NORETRY
+    12.50%  (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff91cbb8190300 bytes_req=192 bytes_alloc=192 gfp_flags=GFP_KERNEL|GFP_ZERO
+    12.42%  (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff91e20e737980 bytes_req=192 bytes_alloc=192 gfp_flags=GFP_KERNEL|GFP_ZERO
+    12.02%  (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff919379aea240 bytes_req=192 bytes_alloc=192 gfp_flags=GFP_KERNEL|GFP_ZERO
+    11.69%  (vx_alloc+0x152) call_site=ffffffffc13ec032 ptr=0xffff922ef33f91b8 bytes_req=88 bytes_alloc=88 gfp_flags=GFP_NOFS|GFP_NOWARN|GFP_NORETRY
+    10.60%  (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff9153dad8be00 bytes_req=192 bytes_alloc=192 gfp_flags=GFP_KERNEL|GFP_ZERO
+     5.79%  (getname_flags+0x4f) call_site=ffffffff8785c74f ptr=0xffff90edba1c3000 bytes_req=4096 bytes_alloc=4096 gfp_flags=GFP_KERNEL
+     5.74%  (vx_alloc+0x152) call_site=ffffffffc13ec032 ptr=0xffff922efbb0b580 bytes_req=88 bytes_alloc=88 gfp_flags=GFP_NOFS|GFP_NOWARN|GFP_NORETRY
+     4.88%  (do_io_submit+0x194) call_site=ffffffff878a1da4 ptr=0xffff91224f606a80 bytes_req=192 bytes_alloc=192 gfp_flags=GFP_KERNEL|GFP_ZERO
+```
+
+## perf stat
+
+*perf stat* subcommand can be used to count the target event during the specified seconds.
+
+The following example shows the *kmem:kmem_cache_alloc* tracepoints fired 146,375 times during 5 seconds.
+
+```bash
+$ perf stat -e kmem:kmem_cache_alloc -p `pidof fio` -a -- sleep 5
+
+ Performance counter stats for process id '9639':
+
+           146,375      kmem:kmem_cache_alloc
+
+       5.003282238 seconds time elapsed
+```
+## Dynamic tracing with probe events
+
+Except for tracing the predefined perf events which are present in *perf list* command, *perf* is capable of creating more events dynamically.
+
+**kprobes**
+
+**uprobes**
+
+## perf stat
 
 ## Resource
 
