@@ -11,8 +11,6 @@ tags: [Tracing]
 
 perf, aka perf_events, is the official Linux profiler and included in the Linux kernel source under tools/perf. It can instrument CPU performance counters, tracepoints, kprobes, and uprobes. It is capable of system profiling. 
 
-## What can perf do?
-
 ## Performance Monitoring Counter(PMC)
 
 **Show system wide PMC statistics**
@@ -585,5 +583,5 @@ $ perf probe -x /usr/lib64/libc.so.6 --vars fopen
 
 ## Resource
 
-* [perf source code](https://elixir.bootlin.com/linux/latest/source/tools/perf)
+* <https://elixir.bootlin.com/linux/latest/source/tools/perf>
 * <https://www.kernel.org/doc/html/latest/trace/>
