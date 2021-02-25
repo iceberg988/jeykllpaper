@@ -246,6 +246,158 @@ Except for tracing the predefined perf events which are present in *perf list* c
 
 ## CPU profiling
 
+perf is often used for CPU profiling. 
+
+In the following example, we have a fio workload running to create 10000 files and 100KB each. We can profile the workload while it's running.
+
+We increase the open files parameter value from the default 1024 to 10240 so that we can create 10000 files.
+
+```bash
+$ ulimit -a | grep "open files"
+open files                      (-n) 1024
+
+$ ulimit -n 10240
+
+$ ulimit -a | grep "open files"
+open files                      (-n) 10240
+```
+
+We use the following fio job file to run the workload.
+
+```bash
+$ cat fio_job_file.ini
+[job1]
+ioengine=libaio
+iodepth=8
+rw=write
+direct=1
+nrfiles=10000
+filesize=102400
+blocksize=4096
+dedupe_percentage=30
+buffer_compress_percentage=50
+buffer_pattern="0123456789"
+numjobs=1
+directory=/testdir
+
+$ fio fio_job_file.ini
+```
+
+We start the perf profiling in a different terminal while the above fio workload is running.
+
+```bash
+$ perf record -F 99 -p `pidof fio` -a -g -- sleep 5
+$ perf report --stdio > perf.report.stdio.out
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 335  of event 'cycles:ppp'
+# Event count (approx.): 3215628508
+#
+# Children      Self  Command  Shared Object       Symbol
+# ........  ........  .......  ..................  ............................................
+#
+    41.73%     0.00%  :198904  [kernel.kallsyms]   [k] system_call_fastpath
+            |
+            ---system_call_fastpath
+               |
+               |--30.99%--sys_io_submit
+               |          |
+               |          |--29.96%--do_io_submit
+               |          |          |
+               |          |          |--15.62%--vx_naio_write_v2
+               |          |          |          vx_naio_write
+               |          |          |          |
+               |          |          |          |--9.73%--vx_naio_handoff
+               |          |          |          |          |
+               |          |          |          |           --8.57%--__wake_up
+               |          |          |          |                     __wake_up_common_lock
+               |          |          |          |                     __wake_up_common
+               |          |          |          |                     vx_wq_wakeup_function
+               |          |          |          |                     default_wake_function
+               |          |          |          |                     try_to_wake_up
+               |          |          |          |                     |
+               |          |          |          |                      --0.87%--_raw_spin_lock_irqsave
+               |          |          |          |
+               |          |          |           --5.89%--vx_naio_checks.isra.5.constprop.6
+               |          |          |                     |
+               |          |          |                      --5.16%--vx_fel_io_allowed
+               |          |          |                                |
+               |          |          |                                |--2.86%--vx_irwunlock
+               |          |          |                                |          vx_recsmp_rangeunlock
+               |          |          |                                |          vx_rwsleep_rec_unlock
+               |          |          |                                |
+               |          |          |                                 --1.92%--vx_irwlock
+               |          |          |                                           vx_irwlock2
+               |          |          |                                           vx_recsmp_rangelock
+               |          |          |                                           vx_rwsleep_rec_lock
+               |          |          |                                           _raw_spin_lock_irqsave
+               |          |          |
+               |          |          |--7.94%--kmem_cache_alloc
+               |          |          |          __slab_alloc
+               |          |          |          ___slab_alloc
+               |          |          |
+               |          |          |--3.83%--rw_verify_area
+               |          |          |          security_file_permission
+               |          |          |          |
+               |          |          |           --3.48%--selinux_file_permission
+               |          |          |                     __inode_security_revalidate
+               |          |          |
+               |          |          |--1.04%--lookup_ioctx
+               |          |          |
+               |          |           --0.83%--fget
+               |          |
+               |           --0.86%--kmem_cache_alloc
+               |
+               |--5.52%--sys_io_getevents
+               |          read_events
+               |          |
+               |          |--3.06%--schedule
+               |          |          __schedule
+               |          |          |
+               |          |           --2.76%--deactivate_task
+               |          |                     update_rq_clock.part.76
+               |          |
+               |          |--1.77%--aio_read_events
+               |          |          |
+               |          |           --0.58%--_cond_resched
+               |          |
+               |           --0.64%--prepare_to_wait
+               |                     _raw_spin_lock_irqsave
+               |
+                --5.04%--sys_open
+                          do_sys_open
+                          |
+                          |--4.12%--do_filp_open
+                          |          path_openat
+                          |          |
+                          |          |--2.38%--link_path_walk
+                          |          |          |
+                          |          |           --0.66%--lookup_fast
+                          |          |                     vx_drevalidate
+                          |          |                     vx_nmspc_resolve
+                          |          |                     _raw_spin_lock_irqsave
+                          |          |
+                          |          |--0.90%--get_empty_filp
+                          |          |          |
+                          |          |           --0.72%--kmem_cache_alloc
+                          |          |
+                          |           --0.81%--do_last
+                          |                     |
+                          |                      --0.56%--__audit_inode
+                          |                                audit_copy_inode
+                          |                                get_vfs_caps_from_disk
+                          |                                vx_linux_getxattr
+                          |                                vx_get_eatype
+                          |
+                           --0.92%--getname
+                                     getname_flags
+                                     kmem_cache_alloc
+[...]
+```
+
 ## Resource
 
 * [perf source code](https://elixir.bootlin.com/linux/latest/source/tools/perf)
